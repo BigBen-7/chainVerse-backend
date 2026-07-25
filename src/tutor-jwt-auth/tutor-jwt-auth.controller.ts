@@ -1,0 +1,50 @@
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { ParseObjectIdPipe } from '../common/pipes/parse-object-id.pipe';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { TutorJwtAuthService } from './tutor-jwt-auth.service';
+import { CreateTutorJwtAuthDto } from './dto/create-tutor-jwt-auth.dto';
+import { UpdateTutorJwtAuthDto } from './dto/update-tutor-jwt-auth.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Role } from '../common/enums/role.enum';
+import { Roles } from '../common/decorators/roles.decorator';
+
+@ApiBearerAuth('access-token')
+@Controller('tutor/jwt-auth')
+export class TutorJwtAuthController {
+  constructor(private readonly service: TutorJwtAuthService) {}
+
+  @Get()
+  async findAll() {
+    return this.service.findAll();
+  }
+
+  @Get(':id')
+  async findOne(@Param('id', new ParseObjectIdPipe()) id: string) {
+    return this.service.findOne(id);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MODERATOR, Role.TUTOR)
+  async create(@Body() payload: CreateTutorJwtAuthDto) {
+    return this.service.create(payload);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MODERATOR, Role.TUTOR)
+  async update(
+    @Param('id', new ParseObjectIdPipe()) id: string,
+    @Body() payload: UpdateTutorJwtAuthDto,
+  ) {
+    return this.service.update(id, payload);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MODERATOR)
+  async remove(@Param('id', new ParseObjectIdPipe()) id: string) {
+    return this.service.remove(id);
+  }
+}
